@@ -21,6 +21,6 @@ public class TelegramBotConfig {
         sendFrom = "aagrigoryev1979@gmail.com";
         subject = "Интех Support Bot: новая заявка";
         name = "GrishshaBot";
-        token = "1940263005:AAHzNkWxJJvJY10AJLM5HOWrVOyaSnST9VI";
+        token = " ";
     }
 }
