@@ -9,18 +9,18 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>ru.it-task</groupId>
-	<artifactId>demoBot</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
-	<name>demoBot</name>
-	<description>Demo project for Spring Boot</description>
+	<artifactId>IntekhBot</artifactId>
+	<version>1.0.1-RELEASE</version>
+	<name>IntekhBot</name>
+	<description>IntekhBot project</description>
 	<properties>
-		<java.version>11</java.version>
+		<java.version>1.8</java.version>
 	</properties>
 	<dependencies>
 		<dependency>
 			<groupId>org.telegram</groupId>
-			<artifactId>telegrambots</artifactId>
-			<version>5.3.0</version>
+			<artifactId>telegrambots-spring-boot-starter</artifactId>
+			<version>5.4.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -43,10 +43,6 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-mail</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.flywaydb</groupId>
-			<artifactId>flyway-core</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
@@ -99,5 +95,4 @@
 			</plugin>
 		</plugins>
 	</build>
-
 </project>
