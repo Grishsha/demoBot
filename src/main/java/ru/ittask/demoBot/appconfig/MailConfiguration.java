@@ -41,7 +41,7 @@ public class MailConfiguration {
         mailSender.setPort(mailPort);
 
         mailSender.setUsername(mailUserName); //("supportbot@it-task.ru");//
-        mailSender.setPassword(mailPassword);//("ItT@$kP@ssw0r1d"); //
+        mailSender.setPassword(mailPassword);//
 
         Properties props = mailSender.getJavaMailProperties();
         props.put("mail.smtp.ssl.trust",  mailSslTrust);
@@ -57,7 +57,7 @@ public class MailConfiguration {
         mailSender.setPort(587);
 
         mailSender.setUsername("aagrigoryev1979@gmail.com"); //("supportbot@it-task.ru");//
-        mailSender.setPassword("besfuv-qUhmy3-zinmob");//("ItT@$kP@ssw0r1d"); //
+        mailSender.setPassword(" ");//
 
         Properties props = mailSender.getJavaMailProperties();
         props.put("mail.smtp.ssl.trust", "*");
