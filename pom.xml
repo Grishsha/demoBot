@@ -9,7 +9,7 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>ru.it-task</groupId>
-	<artifactId>IntekhBot</artifactId>
+	<artifactId>IntechBot</artifactId>
 	<version>1.0.1-RELEASE</version>
 	<name>IntekhBot</name>
 	<description>IntekhBot project</description>
