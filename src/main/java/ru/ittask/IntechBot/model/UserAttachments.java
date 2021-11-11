@@ -10,11 +10,17 @@ import java.util.List;
 @NoArgsConstructor
 public class UserAttachments {
 
-    private long userId;
+    //private long userId;
     private List<String> attachmentsPath = new ArrayList<>();
+    private List<String> attachmentsFileId = new ArrayList<>();
+
 
     public void addNewAttachmentPath(String path) {
         attachmentsPath.add(path);
+    }
+
+    public void addNewAttachmentsFileId(String file_id) {
+        attachmentsFileId.add(file_id);
     }
 
     public String toString() {
@@ -37,6 +43,8 @@ public class UserAttachments {
 
     public void removeAllPaths() {
         attachmentsPath = null;
+        attachmentsFileId = null;
         attachmentsPath = new ArrayList<>();
+        attachmentsFileId = new ArrayList<>();
     }
 }

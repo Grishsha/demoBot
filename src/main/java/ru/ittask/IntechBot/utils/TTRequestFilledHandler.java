@@ -48,7 +48,7 @@ public class TTRequestFilledHandler {
         message.setReplyMarkup(mainMenuButtons.getMainMenuKeyboard());
 
         dataCache.setUserCurrentBotState(chatId, BotState.SHOW_MAIN_MENU);
-        userAttachments.removeAllPaths();
+        //userAttachments.removeAllPaths();
         incidentData.removeIncidentData();
         return message;
     }

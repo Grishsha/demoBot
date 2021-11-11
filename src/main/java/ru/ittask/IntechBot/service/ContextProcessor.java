@@ -33,6 +33,8 @@ public class ContextProcessor {
 
         message.setChatId(String.valueOf(chatId));
 
+        if (chatId == 0 || chatId < 0) return null;
+
         if (update.hasMessage() && update.getMessage().hasText()) {
             switch (update.getMessage().getText()) {
                 case "/start":

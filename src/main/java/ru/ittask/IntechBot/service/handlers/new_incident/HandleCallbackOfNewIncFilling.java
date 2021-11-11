@@ -82,6 +82,12 @@ public class HandleCallbackOfNewIncFilling implements CreateIncidentInt {//Handl
                     message.setReplyMarkup(inlineMenuButtons.getInlineMessageButtons());
                     dataCache.setUserCurrentBotState(chatId, BotState.INC_SERVICE);
                 }*/
+                if (update.getCallbackQuery().getData().equals("buttonNext")) {
+                    message.setText(BotState.INC_SERVICE.getDescription().concat("" +
+                            "\n\nЕсли вы не знаете, то нажмите ПРОПУСТИТЬ"));
+                    message.setReplyMarkup(inlineMenuButtons.getNextButton());
+                    dataCache.setUserCurrentBotState(chatId, BotState.INC_SERVICE);
+                }
                 break;
             case INC_SERVICE:
                 /*if (update.getCallbackQuery().getData().equals("buttonYes")) {

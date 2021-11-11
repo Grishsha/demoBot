@@ -9,6 +9,7 @@ public class UserProfileData {
     String firstName;
     String secondName;
     String lastName;
+    String userName; //т.е. логин а-ля @Grishhsa
     String department;
     String eMail;
     String phone;
@@ -29,6 +30,12 @@ public class UserProfileData {
         if (lastName == null)
             return "";
         return lastName;
+    }
+
+    public String getUserName() {
+        if (userName == null)
+            return "";
+        return userName;
     }
 
     public String getDepartment() {
@@ -52,8 +59,8 @@ public class UserProfileData {
     public String toString() {
         String resultString = "";
         resultString += String.format("\n\nЗаявитель: %s %s %s\n\nПодразделение: %s" +
-                        "\nТелефон: %s\nE-mail: %s", getLastName(), getFirstName(), getSecondName()
-                , getDepartment(), getPhone(), getEMail());
+                        "\nТелефон: %s\nE-mail: %s\ntelegram username: %s", getLastName(), getFirstName(), getSecondName()
+                , getDepartment(), getPhone(), getEMail(), getUserName());
         return resultString;
     }
 }

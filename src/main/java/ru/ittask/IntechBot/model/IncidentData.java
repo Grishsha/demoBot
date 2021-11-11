@@ -49,7 +49,7 @@ public class IncidentData {
     public String toString() {
         String resultString = "";
 
-        resultString += String.format("Ваша заявка со следующим описанием: \n\n%s" +
+        resultString += String.format("Описание заявки: \n\n%s" +
                         "\n\nУслуга: %s\nОтветственная группа: %s" +
                         "\nИмя исполнителя: %s", getDescription(), getService()
                 , getRespGroup(), getRespPerson());

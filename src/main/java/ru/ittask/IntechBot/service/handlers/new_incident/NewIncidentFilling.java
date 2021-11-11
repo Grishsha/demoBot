@@ -60,9 +60,13 @@ public class NewIncidentFilling implements CreateIncidentInt {//HandleTextMessag
                 dataCache.setIncidentData(chatId, incidentData);
 
                 if (userAttachments.getCount() == 0) {
-                    message.setText("Хотите к описанию добавить фото?\n" +
+                    /*message.setText("Хотите к описанию добавить фото?\n" +
                             "нажмите ДА или НЕТ");
-                    message.setReplyMarkup(inlineMenuButtons.getInlineMessageButtons());
+                    message.setReplyMarkup(inlineMenuButtons.getInlineMessageButtons());*/
+                    message.setText(BotState.INC_PHOTO.getDescription().concat("" +
+                            "\n\nЛибо нажмите ПРОПУСТИТЬ"));
+                    message.setReplyMarkup(inlineMenuButtons.getNextButton());
+                    dataCache.setUserCurrentBotState(chatId, BotState.INC_PHOTO);
                 } else {
                     /*message.setText("Знаете ли вы название IT-сервиса?\n" +
                             "нажмите ДА или НЕТ");

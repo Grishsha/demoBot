@@ -50,6 +50,8 @@ public class NewUserProfile implements NewUserRegistrationInt {//HandleTextMessa
                 break;
             case REG_LAST_NAME:
                 userProfileData.setLastName(update.getMessage().getText());
+                if (update.getMessage().getFrom().getUserName() != null)
+                    userProfileData.setUserName("@".concat(update.getMessage().getFrom().getUserName()));
                 /*if (currentPhaseState == PhaseState.CHANGE_USER_PROFILE) {
                     message.setText("Хотите поменять что-то еще?");
                     message.setReplyMarkup(inlineMenuButtons.getInlineMessageButtons());
@@ -158,7 +160,7 @@ public class NewUserProfile implements NewUserRegistrationInt {//HandleTextMessa
             entity.setUserProfileData(userProfileData);
 
             if (repository.existsById(chatId)) {
-                log.error("delete from registration");
+                //log.error("delete from registration");
                 repository.deleteById(chatId);
                 repository.save(entity);
             } else

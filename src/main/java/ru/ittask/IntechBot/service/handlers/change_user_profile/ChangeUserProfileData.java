@@ -50,23 +50,27 @@ public class ChangeUserProfileData implements ChangeUserProfileInt {//HandleText
                 userProfileData.setSecondName(update.getMessage().getText());
                 break;
             case EDIT_EMAIL:
-                if (!checkFormat.isCorrect(currentBotState, update.getMessage().getText())) {
+                if (checkFormat.isCorrect(currentBotState, update.getMessage().getText())) {
+                    userProfileData.setEMail(update.getMessage().getText());
+                    break;
+                } else {
                     message.setText("введенный вами текст не похож на адрес почты.\n" +
                             "Попробуйте еще раз.");
-                    break;
+                    return message;
                 }
-                userProfileData.setEMail(update.getMessage().getText());
-                break;
             case EDIT_DEPARTMENT:
                 userProfileData.setDepartment(update.getMessage().getText());
                 break;
             case EDIT_PHONE:
                 if (update.getMessage().hasText())
-                    if (!checkFormat.isCorrect(currentBotState, update.getMessage().getText())) {
+                    if (checkFormat.isCorrect(currentBotState, update.getMessage().getText())) {
+                        message.setReplyMarkup(mainMenuButtons.getChangeMenuKeyboard(true));
+                        userProfileData.setPhone(update.getMessage().getText());
+                        break;
+                    } else {
                         message.setText("введенный вами текст не похож на номер телефона.\n" +
                                 "Попробуйте еще раз.");
-                        message.setReplyMarkup(mainMenuButtons.getChangeMenuKeyboard(true));
-                        break;
+                        return message;
                     }
                 if (update.getMessage().hasContact())
                     userProfileData.setPhone(update.getMessage().getContact().getPhoneNumber());
@@ -76,7 +80,6 @@ public class ChangeUserProfileData implements ChangeUserProfileInt {//HandleText
             default:
                 break;
         }
-
         message.setText(BotState.CHANGE_USER_PROFILE.getDescription());
         message.setReplyMarkup(inlineMenuButtons.getInlineMessageButtons());
         dataCache.setUserProfileData(chatId, userProfileData);

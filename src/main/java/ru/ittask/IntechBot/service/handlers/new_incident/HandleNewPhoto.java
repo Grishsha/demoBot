@@ -9,7 +9,9 @@ import ru.ittask.IntechBot.cache.DataCache;
 import ru.ittask.IntechBot.controller.Controller;
 import ru.ittask.IntechBot.model.BotState;
 import ru.ittask.IntechBot.model.UserAttachments;
+import ru.ittask.IntechBot.service.handlers.menu.InlineMenuButtons;
 import ru.ittask.IntechBot.service.handlers.menu.MainMenuButtons;
+import ru.ittask.IntechBot.utils.CurrentProcessPhase;
 
 @Slf4j
 @NoArgsConstructor
@@ -33,19 +35,21 @@ public class HandleNewPhoto implements CreateIncidentInt {//HandleMessageByType 
         BotState currentBotState = dataCache.getUserCurrentBotState(chatId);
         UserAttachments userAttachments = dataCache.getUserFilesData(chatId);
         MainMenuButtons mainMenuButtons = new MainMenuButtons();
+        InlineMenuButtons inlineMenuButtons = new InlineMenuButtons();
 
         if (currentBotState == BotState.INC_DESCRIPTION || currentBotState == BotState.INC_PHOTO) {
-            String fp;
+            //String fp;
             try {
-                fp = controller.getFilePath(update);
-            } catch (TelegramApiException e) {
+                //fp =
+                controller.saveFilePathAndFileId(update);
+            } catch (TelegramApiException | NullPointerException e) {
                 e.printStackTrace();
                 message.setText("К сожалению добавить фотографию к заявке не удалось.\n" +
                         "Попробуйте еще раз.");
                 return message;
             }
-            userAttachments.addNewAttachmentPath(fp);
-            dataCache.setUserAttachments(update.getMessage().getChatId(), userAttachments);
+            //userAttachments.addNewAttachmentPath(fp);
+            //dataCache.setUserAttachments(update.getMessage().getChatId(), userAttachments);
             message.setText("Фотография добавлена к заявке");
             if (currentBotState == BotState.INC_PHOTO) {
                 message.setText("Фотография добавлена к заявке.\n\n" +
@@ -57,7 +61,14 @@ public class HandleNewPhoto implements CreateIncidentInt {//HandleMessageByType 
             }
             return message;
         } else {
-            message.setText("Здесь нельзя вставлять картинки");
+            String str = "Здесь нельзя вставлять картинки";
+            if (new CurrentProcessPhase().get(currentBotState) == BotState.INC_FILLING) {
+                str += "\n\n";
+                str += currentBotState.getDescription();
+                str += "\n\nЕсли вы не знаете, то нажмите ПРОПУСТИТЬ";
+                message.setReplyMarkup(inlineMenuButtons.getNextButton());
+            }
+            message.setText(str);
             return message;
         }
     }

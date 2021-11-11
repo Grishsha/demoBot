@@ -14,7 +14,9 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.GetFile;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.objects.File;
+import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.PhotoSize;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
@@ -28,6 +30,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Properties;
 
 @Slf4j
@@ -65,7 +68,15 @@ public class Controller extends TelegramLongPollingBot {
     private String botUserName;
     @Value("${telegram.bot.token}")
     private String botToken;
-    private DataCache dataCache;
+    private final DataCache dataCache;
+    @Value("${support.group.enabled}")
+    private String supportGroupEnabled;
+    @Value("${support.group.chatid}")
+    private String supportGroupChaId;
+    @Value("${support.use.email.profile.sendfrom.enable}")
+    private String supportUseEmailProfileSendfromEnable;
+    @Value("${support.use.email.profile.sendto.enable}")
+    private String supportUseEmailProfileSendtoEnable;
     private SendMessage message;
 
     public Controller() {
@@ -85,52 +96,84 @@ public class Controller extends TelegramLongPollingBot {
     @SneakyThrows
     @Override
     public void onUpdateReceived(Update update) {
-        //ServiceClass service = new ServiceClass(update, this, dataCache);
         ContextProcessor contextProcessor = new ContextProcessor();
-
-        message = contextProcessor.process(dataCache, update, this);//service.handleUpdate();
+        try {
+            message = contextProcessor.process(dataCache, update, this);
+        } catch (Exception e) {
+            log.error("Exception while sending message {} to user: {}", message, e.getMessage());
+        }
 
         if (message != null) {
             try {
+                UserAttachments userAttachments = dataCache.getUserFilesData(Long.parseLong(message.getChatId()));
+                SendMessage sm = new SendMessage();
+
+                if (message.getText().startsWith("Описание заявки: ")) {
+
+                    if (Objects.equals(getSupportGroupEnabled(), "true") && !getSupportGroupChaId().isEmpty()) {
+                        sm.setChatId(getSupportGroupChaId());
+                        sm.setText("-----------------------------------" +
+                                "\nСформирована новая заявка" +
+                                "\n-----------------------------------" +
+                                "\nфотографии приложенные к заявке");
+                        execute(sm);
+                        sendPhoto(userAttachments, Long.parseLong(getSupportGroupChaId()));
+                        sm.setText(message.getText());
+                        execute(sm);
+                    }
+
+                    if (userAttachments.getCount() > 0) {
+                        sm.setChatId(message.getChatId());
+                        sm.setText("-----------------------------------" +
+                                "\nСформирована новая заявка" +
+                                "\n-----------------------------------" +
+                                "\nфотографии приложенные к заявке");
+                        execute(sm);
+                        sendPhoto(userAttachments, Long.parseLong(message.getChatId()));
+                        userAttachments.removeAllPaths();
+                    }
+                }
                 execute(message);
             } catch (TelegramApiException e) {
-                //log.error("Exception while sending message {} to user: {}", message, e.getMessage());
+                log.error("Exception while sending message {} to user: {}", message, e.getMessage());
             }
         }
-    }
-
-    @SneakyThrows
-    public String getFilePath(Update update) throws TelegramApiException {
-        // Check that the update contains a message and the message has a photo
-        if (update.hasMessage() && update.getMessage().hasPhoto()) {
-            // When receiving a photo, you usually get different sizes of it
-            List<PhotoSize> photos = update.getMessage().getPhoto();
-            PhotoSize photo = photos.stream()
-                    .max(Comparator.comparing(PhotoSize::getFileSize)).orElse(null);
-
-            assert photo != null;
-            String fp = photo.getFilePath();
-            if (fp != null) {
-                return fp;
-            } else {
-                String fff = photo.getFileId();
-                GetFile getFileMethod = new GetFile();
-                getFileMethod.setFileId(photo.getFileId());
-                try {
-                    // We execute the method using AbsSender::execute method.
-                    File file = execute(getFileMethod);
-                    // We now have the file_path
-                    return file.getFilePath();
-                } catch (TelegramApiException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-        // Return null if not found
-        return null;
     }
 
     //@SneakyThrows
+    public void/*String*/ saveFilePathAndFileId(Update update) throws TelegramApiException, NullPointerException{
+        // Check that the update contains a message and the message has a photo
+        if (update.hasMessage() && update.getMessage().hasPhoto()) {
+            UserAttachments userAttachments = dataCache.getUserFilesData(update.getMessage().getChatId());
+
+            List<PhotoSize> photos = update.getMessage().getPhoto();
+            PhotoSize photo = photos.stream().max(Comparator.comparing(PhotoSize::getFileSize)).orElse(null);
+
+            /*String fp = photo.getFilePath();
+            if (fp != null) {
+                return fp;
+            } else {
+            String fff = photo.getFileId();*/
+
+            GetFile getFileMethod = new GetFile();
+            try {
+                getFileMethod.setFileId(photo.getFileId());
+                // We execute the method using AbsSender::execute method.
+                File file = execute(getFileMethod);
+                userAttachments.addNewAttachmentsFileId(photo.getFileId());
+                userAttachments.addNewAttachmentPath(file.getFilePath());
+                dataCache.setUserAttachments(update.getMessage().getChatId(), userAttachments);
+                // We now have the file_path
+                //return file.getFilePath();
+            } catch (TelegramApiException | NullPointerException e) {
+                e.printStackTrace();
+            }
+        }
+        // Return null if not found
+        //return null;
+    }
+
+    @SneakyThrows
     public void sendEmail(long chatId, String message, UserAttachments userAttachments) throws MessagingException, TelegramApiException {
         List<String> attPath;
         int count = 1;
@@ -139,9 +182,15 @@ public class Controller extends TelegramLongPollingBot {
         JavaMailSender emailSender = getJavaMailSender();
         final MimeMessage mimeMessage = emailSender.createMimeMessage();
         final MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true);
-        helper.setSubject(mailSubject);
-        helper.setFrom(mailSendFrom);
-        helper.setTo(dataCache.getUserProfileData(chatId, repository).getEMail());//mailSendTo);//dataCache.getUserProfileData(chatId, repository).getEMail());
+        helper.setSubject(getMailSubject());
+        if (Objects.equals(getSupportUseEmailProfileSendfromEnable(), "true"))
+            helper.setFrom(dataCache.getUserProfileData(chatId, repository).getEMail());
+        else
+            helper.setFrom(getMailSendFrom());
+        if (Objects.equals(getSupportUseEmailProfileSendtoEnable(), "true"))
+            helper.setTo(dataCache.getUserProfileData(chatId, repository).getEMail());
+        else
+            helper.setTo(getMailSendTo());
         helper.setText(message, false);
 
         if (userAttachments.getAttachmentsPath() != null) {
@@ -153,23 +202,23 @@ public class Controller extends TelegramLongPollingBot {
                 helper.addAttachment(fileName, downloadFile(filePath));
                 count++;
             }
-            userAttachments.removeAllPaths();
+            //userAttachments.removeAllPaths();
         }
         emailSender.send(mimeMessage);
     }
 
     public JavaMailSender getJavaMailSender() {
         JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
-        mailSender.setHost(mailHost);
-        mailSender.setPort(Integer.parseInt(mailPort));
-        mailSender.setUsername(mailUserName);
-        mailSender.setPassword(mailPassword);
+        mailSender.setHost(getMailHost());
+        mailSender.setPort(Integer.parseInt(getMailPort()));
+        mailSender.setUsername(getMailUserName());
+        mailSender.setPassword(getMailPassword());
         Properties props = mailSender.getJavaMailProperties();
-        props.put("mail.smtp.ssl.trust", mailSslTrust);
-        props.put("mail.transport.protocol", mailProtocol);
-        props.put("mail.smtp.auth", mailSmtpAuth);
-        props.put("mail.smtp.starttls.enable", mailTtlsEnable);
-        props.put("mail.debug", mailDebug);
+        props.put("mail.smtp.ssl.trust", getMailSslTrust());
+        props.put("mail.transport.protocol", getMailProtocol());
+        props.put("mail.smtp.auth", getMailSmtpAuth());
+        props.put("mail.smtp.starttls.enable", getMailTtlsEnable());
+        props.put("mail.debug", getMailDebug());
 
         return mailSender;
     }
@@ -196,20 +245,43 @@ public class Controller extends TelegramLongPollingBot {
     }*/
 
     @SneakyThrows
-    public void sendPhoto(long chatId, String imageCaption, String imagePath) {
-        /*File image = ResourceUtils.getFile("classpath:" + imagePath);
-        SendPhoto sendPhoto = new SendPhoto().setPhoto(image);
-        sendPhoto.setChatId(chatId);
-        sendPhoto.setCaption(imageCaption);
-        execute(sendPhoto);*/
+    public void sendPhoto(UserAttachments userAttachments, long chaId) {
+        //UserAttachments userAttachments
+        String capt = "";
+        int count = 1;
+        //log.error(String.valueOf(userAttachments.getCount()));
+        if (userAttachments.getCount() > 0) {
+            List<String> attPath = userAttachments.getAttachmentsFileId();
+            SendPhoto photo = new SendPhoto();//.setChatId(message.getChatId()).setPhoto(file_id);
+            //log.error("inside photo");
+            for (String file_id : attPath) {
+                //log.error(file_id);
+                photo.setPhoto(new InputFile(file_id));
+                photo.setChatId(String.valueOf(chaId));
+                //log.error(photo.getChatId());
+                capt = "photo_";
+                capt += count;
+                capt += ".jpg";
+                photo.setCaption(capt);
+                //log.error(file_id);
+                try {
+                    execute(photo);
+                } catch (Exception e) {
+                    log.error("SendPhoto Error: Exception while sending message {} to user: {}", photo, e.getMessage());
+                }
+
+                count++;
+            }
+        }
     }
 
-    @SneakyThrows
-    public void sendDocument(long chatId, String caption, File sendFile) {
-        /*SendDocument sendDocument = new SendDocument();
+/*
+        @SneakyThrows
+        public void sendDocument ( long chatId, String caption, File sendFile){
+        SendDocument sendDocument = new SendDocument();
         sendDocument.setChatId(chatId);
         sendDocument.setCaption(caption);
         sendDocument.setDocument(sendFile);
-        execute(sendDocument);*/
-    }
+        execute(sendDocument);
+    }*/
 }

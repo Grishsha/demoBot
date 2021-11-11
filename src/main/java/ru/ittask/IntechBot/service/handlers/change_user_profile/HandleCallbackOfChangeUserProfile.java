@@ -68,7 +68,7 @@ public class HandleCallbackOfChangeUserProfile implements ChangeUserProfileInt {
                 break;
             case "buttonYes":
                 message.setText("Выберите что вы хотите изменить");
-                dataCache.setUserCurrentBotState(chatId, BotState.SHOW_MAIN_MENU);
+                //dataCache.setUserCurrentBotState(chatId, BotState.CHANGE_USER_PROFILE);
                 message.setReplyMarkup(inlineMenuButtons.getUserProfileButtons());
                 break;
             case "buttonNo":
@@ -80,7 +80,7 @@ public class HandleCallbackOfChangeUserProfile implements ChangeUserProfileInt {
                 entity.setUserProfileData(userProfileData);
 
                 if (repository.existsById(chatId)) {
-                    log.error("delete from change profile");
+                    //log.error("delete from change profile");
                     repository.deleteById(chatId);
                     repository.save(entity);
                 } else
